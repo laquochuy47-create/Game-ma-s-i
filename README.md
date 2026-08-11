@@ -1,5 +1,5 @@
 # Game-ma-s-i
-Thành viên 1: Phát triển Core Server (Huy có thể cân nhắc đảm nhận phần này)Thiết lập kiến trúc mạng sử dụng giao thức TCP Sockets để đảm bảo độ tin cậy, không mất gói tin.  Xây dựng hệ thống lắng nghe, chấp nhận hoặc từ chối kết nối từ Client.  Quản lý đa kết nối (Multi-threading/Concurrency) để xử lý mượt mà nhiều Client cùng lúc.  Xử lý ngoại lệ quan trọng: Phát hiện Client ngắt kết nối đột ngột, thông báo và loại người chơi mà không làm treo Server.  
+Thành viên 1: Phát triển Core Server Thiết lập kiến trúc mạng sử dụng giao thức TCP Sockets để đảm bảo độ tin cậy, không mất gói tin.  Xây dựng hệ thống lắng nghe, chấp nhận hoặc từ chối kết nối từ Client.  Quản lý đa kết nối (Multi-threading/Concurrency) để xử lý mượt mà nhiều Client cùng lúc.  Xử lý ngoại lệ quan trọng: Phát hiện Client ngắt kết nối đột ngột, thông báo và loại người chơi mà không làm treo Server.  
 
 Thành viên 2: Xử lý Game Logic ServerThiết kế logic đóng vai trò "Quản trò": giữ trạng thái game, tự động chia phe và phân vai ngẫu nhiên khi bắt đầu.  Đồng bộ trạng thái thời gian thực: điều phối luồng đếm ngược ban ngày/ban đêm.  Xử lý logic thắng/thua dựa trên hành động nhận được từ Client.  Thiết kế cấu trúc gói tin Message bằng định dạng JSON để xử lý Broadcast (thông báo chung) và Multicast (tin nhắn ẩn danh riêng cho bầy Sói).  
 
