@@ -1,10 +1,15 @@
 # Game-ma-s-i
-Thành viên 1: Phát triển Core Server Thiết lập kiến trúc mạng sử dụng giao thức TCP Sockets để đảm bảo độ tin cậy, không mất gói tin.  Xây dựng hệ thống lắng nghe, chấp nhận hoặc từ chối kết nối từ Client.  Quản lý đa kết nối (Multi-threading/Concurrency) để xử lý mượt mà nhiều Client cùng lúc.  Xử lý ngoại lệ quan trọng: Phát hiện Client ngắt kết nối đột ngột, thông báo và loại người chơi mà không làm treo Server.  
 
-Thành viên 2: Xử lý Game Logic ServerThiết kế logic đóng vai trò "Quản trò": giữ trạng thái game, tự động chia phe và phân vai ngẫu nhiên khi bắt đầu.  Đồng bộ trạng thái thời gian thực: điều phối luồng đếm ngược ban ngày/ban đêm.  Xử lý logic thắng/thua dựa trên hành động nhận được từ Client.  Thiết kế cấu trúc gói tin Message bằng định dạng JSON để xử lý Broadcast (thông báo chung) và Multicast (tin nhắn ẩn danh riêng cho bầy Sói).  
+Thành viên 1: Phát triển Core Server. Thiết lập kiến trúc mạng sử dụng TCP Sockets đa luồng. Code hệ thống lắng nghe, xử lý chấp nhận (Accept) hoặc từ chối (Reject) kết nối từ Client. Xử lý phân luồng gửi tin nhắn chung (Broadcast) và tin nhắn riêng (Multicast). Bắt lỗi ngoại lệ khi Client ngắt kết nối đột ngột.
 
-Thành viên 3: Phát triển Core Client & NetworkXây dựng chức năng cho phép Client nhận/hiển thị trạng thái từ Server và gửi các hành động như vote, chat, cắn, soi.  Đảm bảo Client không tự tính toán logic game.  Áp dụng kỹ thuật asynchronous/background worker cho các nút tương tác mạng để không làm treo giao diện GUI.  Đóng gói và phân tích (parse) các gói tin JSON gửi qua lại với Server.  
+Thành viên 2: Xử lý Game Logic Server. Phân tích logic các pha Ngày và Đêm trong game. Code chức năng quản lý danh sách người chơi. Xây dựng tính năng tự động chia phe và phân vai ngẫu nhiên. Xử lý kết quả khi người chơi Vote và xét các điều kiện thắng/thua.
 
-Thành viên 4: Thiết kế GUI (Client UI/UX)Xây dựng giao diện trên nền tảng đã chọn (WinForms / WPF / JavaFX / PyQt).  Tạo Màn hình 1 (Login) để nhập IP, Port, Tên người chơi.  Tạo Màn hình 2 (Lobby) hiển thị danh sách người chơi online và trạng thái chờ.  Tạo Màn hình 3 (In-game) gồm 3 phần: danh sách sống/chết, lịch sử Chat tổng/ẩn danh, các nút chức năng (Vote, Kỹ năng) và đồng hồ đếm ngược.  
+Thành viên 3: Quản lý Đồng bộ & Message. Thiết kế cấu trúc các gói tin Message bằng định dạng JSON. Xử lý logic đóng gói và giải mã (parse) các gói tin JSON. Đồng bộ bộ đếm thời gian (Countdown timer) cho hai pha Ngày/Đêm. Xử lý logic hiển thị các thông báo hệ thống chung.
 
-Thành viên 5: Quản lý Chất lượng (QA/Tester) & Tích hợpThiết lập môi trường demo cuối kỳ chạy 1 Server và 4-5 cửa sổ Client.  Thực hiện kịch bản test logic luồng game: chơi trọn vẹn 1 ván đến khi có phe thắng.  Thực hiện Concurrency test: kiểm tra khi nhiều người nhắn tin hoặc vote cùng lúc.  Thực hiện Test mất kết nối (bắt buộc): cố tình tắt ngang 1 Client để đảm bảo ván đấu tiếp tục bình thường và GUI không treo.
+Thành viên 4: Phát triển Core Client & Network. Thiết lập kết nối mạng từ phía Client gửi tới Server. Code cơ chế nhận và gửi gói tin sử dụng kỹ thuật bất đồng bộ (asynch). Bắt các sự kiện (event) để cập nhật giao diện người dùng (UI) mà không làm treo máy. Tối ưu hóa logic gửi các hành động tương tác như cắn, soi.
+
+Thành viên 5: Thiết kế Client GUI (Ngoài phòng game). Vẽ Mockup giao diện (GUI) cho màn hình Login và màn hình chờ Lobby. Code giao diện màn hình Login cho phép nhập IP, Port và Tên người chơi. Code giao diện màn hình Lobby để hiển thị danh sách người chơi đang online. Ghép luồng để xử lý việc chuyển từ màn hình Login sang Lobby.
+
+Thành viên 6: Thiết kế Client GUI (Trong phòng game/In-game). Vẽ Mockup giao diện cho màn hình lúc đang chơi (In-game). Code bố cục (layout) hiển thị danh sách người chơi. Code phần hiển thị lịch sử Chat, các nút Vote và Kỹ năng. Hiển thị trạng thái người sống/chết cập nhật theo thời gian thực (real-time).
+
+Thành viên 7: Quản lý Chất lượng (QA) & Báo cáo. Khởi tạo và thiết lập kho lưu trữ (Repo) chuẩn. Xây dựng kịch bản để test luồng hoạt động của game. Thực hiện các bài test chịu tải đồng thời (Concurrency test). Thực hiện kịch bản test việc mất kết nối ngang.
