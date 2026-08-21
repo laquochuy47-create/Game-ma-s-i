@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DayActions {
-    // Dùng ConcurrentHashMap để không bị lỗi khi 4 người cùng vote 1 lúc
     private final Map<String, String> votes = new ConcurrentHashMap<>();
 
     public void processVote(String voterId, String targetId) {
@@ -26,6 +25,10 @@ public class DayActions {
                 mostVoted = entry.getKey();
             }
         }
-        return mostVoted; // Trả về ID người bị treo cổ
+        return mostVoted;
+    }
+
+    public void clearVotes() {
+        votes.clear();
     }
 }
