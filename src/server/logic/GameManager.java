@@ -32,12 +32,50 @@ public class GameManager {
         List<Role> roles = new ArrayList<>(Arrays.asList(
             Role.WEREWOLF, Role.SEER, Role.BODYGUARD, Role.VILLAGER, Role.VILLAGER
         ));
+        
+        while (roles.size() < playerList.size()) {
+            roles.add(Role.VILLAGER);
+        }
         Collections.shuffle(roles);
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < playerList.size(); i++) {
             playerList.get(i).setRole(roles.get(i));
         }
+        
         currentPhase = GamePhase.NIGHT;
+    }
+
+    public String advancePhase() {
+        String resultMessage = "";
+        switch (currentPhase) {
+            case NIGHT -> {
+                currentPhase = GamePhase.DAY;
+                resultMessage = "Trời đã sáng! Bắt đầu thảo luận.";
+            }
+                
+            case DAY -> {
+                currentPhase = GamePhase.VOTING;
+                resultMessage = "Thời gian thảo luận đã hết. Bắt đầu bỏ phiếu!";
+            }
+                
+            case VOTING -> {
+                currentPhase = GamePhase.NIGHT;
+                nightActions.clearNightActions();
+                dayActions.clearVotes();
+                resultMessage = "Kết thúc bỏ phiếu. Trời tối, mọi người đi ngủ!";
+            }
+                
+            default -> {
+            }
+        }
+
+        String winStatus = WinConditions.checkWin(players.values());
+        if (!winStatus.equals("NO_WINNER_YET")) {
+            currentPhase = GamePhase.END_GAME;
+            resultMessage += "\nTRÒ CHƠI KẾT THÚC! " + winStatus;
+        }
+
+        return resultMessage;
     }
 
     public synchronized String handleDisconnect(String playerId) {
