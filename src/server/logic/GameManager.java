@@ -49,8 +49,17 @@ public class GameManager {
         String resultMessage = "";
         switch (currentPhase) {
             case NIGHT -> {
+                String nightVictim = nightActions.resolveNightDeath();
+                if (nightVictim != null) {
+                    Player p = players.get(nightVictim);
+                    if (p != null) {
+                        p.setAlive(false);
+                        resultMessage = "Trời đã sáng! Đêm qua " + p.getName() + " đã bị sát hại.";
+                    }
+                } else {
+                    resultMessage = "Trời đã sáng! Đêm qua là một đêm bình yên, không ai chết.";
+                }
                 currentPhase = GamePhase.DAY;
-                resultMessage = "Trời đã sáng! Bắt đầu thảo luận.";
             }
                 
             case DAY -> {
@@ -59,17 +68,28 @@ public class GameManager {
             }
                 
             case VOTING -> {
-                currentPhase = GamePhase.NIGHT;
+                String lynchedPlayer = dayActions.getLynchedPlayer();
+                if (lynchedPlayer != null) {
+                    Player p = players.get(lynchedPlayer);
+                    if (p != null) {
+                        p.setAlive(false);
+                        resultMessage = "Kết thúc bỏ phiếu. " + p.getName() + " đã bị treo cổ!";
+                    }
+                } else {
+                    resultMessage = "Kết thúc bỏ phiếu. Không ai bị treo cổ vì hòa phiếu!";
+                }
+                
                 nightActions.clearNightActions();
                 dayActions.clearVotes();
-                resultMessage = "Kết thúc bỏ phiếu. Trời tối, mọi người đi ngủ!";
+                currentPhase = GamePhase.NIGHT;
+                resultMessage += "\nTrời tối, mọi người đi ngủ!";
             }
                 
             default -> {
             }
         }
 
-        String winStatus = WinConditions.checkWin(players.values());
+        String winStatus = WinConditions.checkWin(new ArrayList<>(players.values()));
         if (!winStatus.equals("NO_WINNER_YET")) {
             currentPhase = GamePhase.END_GAME;
             resultMessage += "\nTRÒ CHƠI KẾT THÚC! " + winStatus;
@@ -83,7 +103,7 @@ public class GameManager {
         if (p != null) {
             p.setConnected(false);
             p.setAlive(false);
-            return WinConditions.checkWin(players.values());
+            return WinConditions.checkWin(new ArrayList<>(players.values()));
         }
         return "NO_WINNER_YET";
     }

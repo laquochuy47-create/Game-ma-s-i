@@ -6,12 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DayActions {
     private final Map<String, String> votes = new ConcurrentHashMap<>();
 
-    public void processVote(String voterId, String targetId) {
+    public void addVote(String voterId, String targetId) {
         votes.put(voterId, targetId);
     }
 
-    public String getEliminatedPlayerId() {
+    public String getLynchedPlayer() {
         if (votes.isEmpty()) return null;
+        
         Map<String, Integer> voteCounts = new ConcurrentHashMap<>();
         for (String targetId : votes.values()) {
             voteCounts.put(targetId, voteCounts.getOrDefault(targetId, 0) + 1);
@@ -19,13 +20,19 @@ public class DayActions {
 
         String mostVoted = null;
         int maxVotes = 0;
+        boolean isTie = false;
+
         for (Map.Entry<String, Integer> entry : voteCounts.entrySet()) {
             if (entry.getValue() > maxVotes) {
                 maxVotes = entry.getValue();
                 mostVoted = entry.getKey();
+                isTie = false;
+            } else if (entry.getValue() == maxVotes) {
+                isTie = true;
             }
         }
-        return mostVoted;
+        
+        return isTie ? null : mostVoted;
     }
 
     public void clearVotes() {
