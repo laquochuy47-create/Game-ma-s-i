@@ -73,5 +73,11 @@ namespace Client
 
             this.Controls.AddRange(new Control[] { lblTitle, lblPlayerCount, lvPlayers, btnReady });
         }
+        public void UpdatePlayerList(string[] players)
+        {
+            if (lvPlayers.InvokeRequired) { lvPlayers.Invoke(new Action(() => UpdatePlayerList(players))); return; }
+            lvPlayers.Items.Clear();
+            foreach(var p in players) lvPlayers.Items.Add(new ListViewItem(p));
+        }
     }
 }
