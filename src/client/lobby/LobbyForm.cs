@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace Client
@@ -7,53 +8,70 @@ namespace Client
     public class LobbyForm : Form
     {
         private ListView lvPlayers;
-        private ProgressBar pbPlayers;
-        private Label lblPlayerCount;
-        private Label lblStatus;
         private Button btnReady;
+        private Label lblTitle, lblPlayerCount;
 
         public LobbyForm()
         {
+            // 1. Cài đặt Form
             this.Text = "Game Ma Sói - Phòng chờ";
-            this.Size = new Size(450, 520);
+            this.Size = new Size(450, 600);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(42, 42, 46);
-            this.ForeColor = Color.White;
+            this.BackColor = Color.FromArgb(20, 24, 30); // Nền rừng đêm tăm tối
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
 
-            Font mainFont = new Font("Segoe UI", 11);
-            Font boldFont = new Font("Segoe UI", 12, FontStyle.Bold);
+            // 2. Bảng màu đồng bộ từ Login
+            Color moonGlowColor = Color.FromArgb(160, 245, 235);
+            Color btnGlassColor = Color.FromArgb(120, 20, 50, 60);
 
-            // Tiêu đề
-            Label lblTitle = new Label() { Text = "🎮 DANH SÁCH NGƯỜI CHƠI", Location = new Point(30, 20), AutoSize = true, Font = boldFont, ForeColor = Color.DarkOrange };
+            Font boldFont = new Font("Segoe UI", 14, FontStyle.Bold);
+            Font mainFont = new Font("Segoe UI", 10);
 
-            // Tiến độ (ProgressBar)
-            pbPlayers = new ProgressBar() { Location = new Point(30, 60), Width = 370, Height = 10, Maximum = 10, Value = 3, Style = ProgressBarStyle.Continuous };
-            lblPlayerCount = new Label() { Text = "Số lượng: 3/10", Location = new Point(30, 75), AutoSize = true, Font = new Font("Segoe UI", 9), ForeColor = Color.LightGray };
+            // 3. Tiêu đề
+            lblTitle = new Label() { Text = "🏰 PHÒNG CHỜ", Location = new Point(0, 20), Width = 450, TextAlign = ContentAlignment.MiddleCenter, Font = boldFont, ForeColor = moonGlowColor };
+            lblPlayerCount = new Label() { Text = "Số lượng: 1/10", Location = new Point(40, 70), AutoSize = true, Font = mainFont, ForeColor = Color.LightGray };
 
-            // Danh sách người chơi (Sử dụng ListView để đẹp hơn ListBox)
-            lvPlayers = new ListView() { Location = new Point(30, 110), Size = new Size(370, 260), BackColor = Color.FromArgb(30, 30, 34), ForeColor = Color.White, Font = mainFont, BorderStyle = BorderStyle.FixedSingle, View = View.Details, HeaderStyle = ColumnHeaderStyle.None, FullRowSelect = true };
-            lvPlayers.Columns.Add("Name", 340);
+            // 4. Danh sách người chơi (Thiết kế phẳng, không viền)
+            lvPlayers = new ListView() { 
+                Location = new Point(40, 100), 
+                Size = new Size(350, 350), 
+                BackColor = Color.FromArgb(15, 25, 30), 
+                ForeColor = Color.White, 
+                Font = mainFont, 
+                BorderStyle = BorderStyle.None, 
+                View = View.Details, 
+                HeaderStyle = ColumnHeaderStyle.None, 
+                FullRowSelect = true 
+            };
+            lvPlayers.Columns.Add("Name", 320);
             
-           // Dữ liệu mẫu: 5 người chơi
-            lvPlayers.Items.Add(new ListViewItem("👤 nguoi_choi_1 (Bạn) - Host"));
-            lvPlayers.Items.Add(new ListViewItem("👤 nguoi_choi_2"));
-            lvPlayers.Items.Add(new ListViewItem("👤 nguoi_choi_3"));
-            lvPlayers.Items.Add(new ListViewItem("👤 nguoi_choi_4"));
-            lvPlayers.Items.Add(new ListViewItem("👤 nguoi_choi_5"));
+            // Dữ liệu giả lập ban đầu
+            lvPlayers.Items.Add(new ListViewItem("🐺 Bạn (Host)"));
+            lvPlayers.Items.Add(new ListViewItem("⏳ Đang chờ người chơi khác..."));
 
-            // Cập nhật thanh tiến độ thành 5 người
-            pbPlayers.Value = 5;
-            lblPlayerCount.Text = "Số lượng: 5/10";
-            // Nút Sẵn sàng
-            btnReady = new Button() { Text = "SẴN SÀNG", Location = new Point(30, 390), Width = 370, Height = 40, Font = boldFont, BackColor = Color.SeaGreen, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+            // 5. Nút Sẵn sàng (Kính mờ, bo góc)
+            btnReady = new Button() { Text = "SẴN SÀNG", Location = new Point(40, 480), Width = 350, Height = 45, Font = new Font("Segoe UI", 11, FontStyle.Bold) };
+            btnReady.BackColor = btnGlassColor;
+            btnReady.ForeColor = moonGlowColor;
+            btnReady.FlatStyle = FlatStyle.Flat;
             btnReady.FlatAppearance.BorderSize = 0;
+            btnReady.Cursor = Cursors.Hand;
+            
+            btnReady.Paint += (sender, e) => {
+                GraphicsPath path = new GraphicsPath();
+                int r = 15;
+                path.AddArc(0, 0, r, r, 180, 90);
+                path.AddArc(btnReady.Width - r, 0, r, r, 270, 90);
+                path.AddArc(btnReady.Width - r, btnReady.Height - r, r, r, 0, 90);
+                path.AddArc(0, btnReady.Height - r, r, r, 90, 90);
+                btnReady.Region = new Region(path);
+            };
 
-            // Label trạng thái 
-            lblStatus = new Label() { Text = "⏳ Đang chờ Quản trò bắt đầu ván đấu...", Location = new Point(30, 440), AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Italic), ForeColor = Color.Gold };
-
-            this.Controls.AddRange(new Control[] { lblTitle, pbPlayers, lblPlayerCount, lvPlayers, btnReady, lblStatus });
+            // Đảm bảo tắt form này là tắt luôn toàn bộ Game
             this.FormClosed += (sender, e) => Application.Exit();
+
+            this.Controls.AddRange(new Control[] { lblTitle, lblPlayerCount, lvPlayers, btnReady });
         }
     }
 }
