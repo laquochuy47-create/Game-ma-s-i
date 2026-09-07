@@ -1,0 +1,5 @@
+<Solution>
+	<Project Path="src/shared/SharedLibrary.csproj" />
+	<Project Path="src/client/WerewolfClient.csproj" />
+	<Project Path="src/server/WerewolfServer.csproj" />
+</Solution>
