@@ -3,4 +3,5 @@
 	<Project Path="src/server/WerewolfServer.csproj" />
 	<Project Path="src/shared/SharedLibrary.csproj" />
 	<Project Path="test/GamePacketTests/GamePacketTests.csproj" Id="f4bc117e-0872-4146-bb6e-10c4027c25ad" />
+	<Project Path="test/StressTestClient/StressTestClient.csproj" Id="ac487578-3859-4be8-828d-7d1430c7fc4c" />
 </Solution>
