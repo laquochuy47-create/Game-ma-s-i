@@ -2,130 +2,110 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
-using SharedLibrary;
 
-namespace WerewolfClient
+namespace Client
 {
-    public class ClientNetworkService
+    public class NetworkPacket
     {
-        private TcpClient _client;
-        private StreamReader _reader;
-        private StreamWriter _writer;
-        private CancellationTokenSource _cts;
-        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
+        public string Action { get; set; } = "";
+        public string Target { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Sender { get; set; } = "";
+    }
 
-        public event Action<GamePacket> OnPacketReceived;
-        public event Action OnDisconnected;
+    public class NetworkService
+    {
+        private TcpClient? _client;
+        private StreamReader? _reader;
+        private StreamWriter? _writer;
+        private bool _isConnected;
 
-        public bool IsConnected => _client != null && _client.Connected;
+        public event Action<NetworkPacket>? OnMessageReceived;
+        public event Action<string>? OnStatusChanged;
+        public event Action? OnDisconnected;
 
-        public async Task ConnectAsync(string ip, int port, int timeoutMs = 5000)
+        public bool IsConnected => _isConnected && _client != null && _client.Connected;
+
+        public async Task ConnectAsync(string ip, int port)
         {
             try
             {
                 _client = new TcpClient();
+                await _client.ConnectAsync(ip, port);
 
-                using var connectCts = new CancellationTokenSource(timeoutMs);
-                await _client.ConnectAsync(ip, port, connectCts.Token);
-
-                var stream = _client.GetStream();
+                NetworkStream stream = _client.GetStream();
                 _reader = new StreamReader(stream, Encoding.UTF8);
                 _writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+                _isConnected = true;
 
-                _cts = new CancellationTokenSource();
-                _ = ReceiveLoopAsync(_cts.Token);
+                OnStatusChanged?.Invoke("Kết nối Server thành công!");
+                _ = Task.Run(ListenForServerDataAsync);
             }
             catch (Exception ex)
             {
                 Disconnect();
-                Console.WriteLine($"[Network] Lỗi kết nối: {ex.Message}");
+                OnStatusChanged?.Invoke($"Lỗi kết nối: {ex.Message}");
                 throw;
             }
         }
 
-        public async Task SendActionAsync(string actionStr, string payload = "")
-        {
-            if (!IsConnected || _writer == null) return;
-
-            await _sendLock.WaitAsync();
-            try
-            {
-                var packet = new GamePacket { Action = actionStr, Payload = payload };
-                string json = GamePacket.Serialize(packet);
-                await _writer.WriteLineAsync(json);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Network] Lỗi khi gửi: {ex.Message}");
-                Disconnect();
-            }
-            finally
-            {
-                _sendLock.Release();
-            }
-        }
-
-        public async Task SendChatAsync(string message)
-        {
-            await SendActionAsync("CHAT", message);
-        }
-
-        public void Disconnect()
-        {
-            if (_client == null) return;
-
-            try
-            {
-                _cts?.Cancel();
-                _reader?.Dispose();
-                _writer?.Dispose();
-                _client?.Close();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Network] Lỗi khi đóng socket: {ex.Message}");
-            }
-            finally
-            {
-                _client = null;
-                _reader = null;
-                _writer = null;
-                OnDisconnected?.Invoke();
-            }
-        }
-
-        private async Task ReceiveLoopAsync(CancellationToken token)
+        private async Task ListenForServerDataAsync()
         {
             try
             {
-                while (!token.IsCancellationRequested && IsConnected)
+                while (_isConnected && _reader != null)
                 {
-                    string json = await _reader.ReadLineAsync();
+                    string? jsonLine = await _reader.ReadLineAsync();
+                    if (jsonLine == null) break;
+                    if (string.IsNullOrWhiteSpace(jsonLine)) continue;
 
-                    if (json == null) break;
-
-                    if (string.IsNullOrWhiteSpace(json)) continue;
-
-                    var packet = GamePacket.Deserialize(json);
+                    NetworkPacket? packet = JsonSerializer.Deserialize<NetworkPacket>(jsonLine);
                     if (packet != null)
                     {
-                        OnPacketReceived?.Invoke(packet);
+                        OnMessageReceived?.Invoke(packet);
                     }
                 }
             }
-            catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException)
-            {
-            }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Network] Lỗi nhận dữ liệu: {ex.Message}");
+                OnStatusChanged?.Invoke($"Mất kết nối: {ex.Message}");
             }
             finally
             {
                 Disconnect();
             }
+        }
+
+        public async Task SendPacketAsync(string action, string target = "", string message = "")
+        {
+            if (!_isConnected || _writer == null) return;
+
+            var packet = new NetworkPacket
+            {
+                Action = action,
+                Target = target,
+                Message = message
+            };
+
+            string jsonString = JsonSerializer.Serialize(packet);
+            await _writer.WriteLineAsync(jsonString);
+        }
+
+        public async Task SendChatAsync(string message) => await SendPacketAsync("chat", message: message);
+        public async Task SendVoteAsync(string targetPlayer) => await SendPacketAsync("vote", target: targetPlayer);
+        public async Task SendSkillAsync(string targetPlayer) => await SendPacketAsync("skill", target: targetPlayer);
+
+        public void Disconnect()
+        {
+            if (!_isConnected) return;
+            _isConnected = false;
+            _reader?.Close();
+            _writer?.Close();
+            _client?.Close();
+            _client = null;
+            OnDisconnected?.Invoke();
         }
     }
 }
