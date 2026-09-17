@@ -7,32 +7,32 @@ namespace Client
 {
     public class LobbyForm : Form
     {
+        private NetworkService _networkService;
+        private string _username;
         private ListView lvPlayers;
         private Button btnReady;
         private Label lblTitle, lblPlayerCount;
 
-        public LobbyForm()
+        public LobbyForm(NetworkService networkService, string username)
         {
-            // 1. Cài đặt Form
+            _networkService = networkService;
+            _username = username;
+
             this.Text = "Game Ma Sói - Phòng chờ";
             this.Size = new Size(450, 600);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(20, 24, 30); // Nền rừng đêm tăm tối
+            this.BackColor = Color.FromArgb(20, 24, 30);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
 
-            // 2. Bảng màu đồng bộ từ Login
             Color moonGlowColor = Color.FromArgb(160, 245, 235);
             Color btnGlassColor = Color.FromArgb(120, 20, 50, 60);
-
             Font boldFont = new Font("Segoe UI", 14, FontStyle.Bold);
             Font mainFont = new Font("Segoe UI", 10);
 
-            // 3. Tiêu đề
             lblTitle = new Label() { Text = "🏰 PHÒNG CHỜ", Location = new Point(0, 20), Width = 450, TextAlign = ContentAlignment.MiddleCenter, Font = boldFont, ForeColor = moonGlowColor };
             lblPlayerCount = new Label() { Text = "Số lượng: 1/10", Location = new Point(40, 70), AutoSize = true, Font = mainFont, ForeColor = Color.LightGray };
 
-            // 4. Danh sách người chơi (Thiết kế phẳng, không viền)
             lvPlayers = new ListView() { 
                 Location = new Point(40, 100), 
                 Size = new Size(350, 350), 
@@ -45,12 +45,8 @@ namespace Client
                 FullRowSelect = true 
             };
             lvPlayers.Columns.Add("Name", 320);
-            
-            // Dữ liệu giả lập ban đầu
-            lvPlayers.Items.Add(new ListViewItem("🐺 Bạn (Host)"));
-            lvPlayers.Items.Add(new ListViewItem("⏳ Đang chờ người chơi khác..."));
+            lvPlayers.Items.Add(new ListViewItem($"🐺 {_username} (Bạn)"));
 
-            // 5. Nút Sẵn sàng (Kính mờ, bo góc)
             btnReady = new Button() { Text = "SẴN SÀNG", Location = new Point(40, 480), Width = 350, Height = 45, Font = new Font("Segoe UI", 11, FontStyle.Bold) };
             btnReady.BackColor = btnGlassColor;
             btnReady.ForeColor = moonGlowColor;
@@ -68,16 +64,46 @@ namespace Client
                 btnReady.Region = new Region(path);
             };
 
-            // Đảm bảo tắt form này là tắt luôn toàn bộ Game
-            this.FormClosed += (sender, e) => Application.Exit();
+            btnReady.Click += async (s, e) => {
+                btnReady.Enabled = false;
+                await _networkService.SendPacketAsync("ready", message: _username);
+            };
 
+            this.FormClosed += (sender, e) => Application.Exit();
             this.Controls.AddRange(new Control[] { lblTitle, lblPlayerCount, lvPlayers, btnReady });
+
+            _networkService.OnMessageReceived += HandleLobbyPacket;
         }
+
+        private void HandleLobbyPacket(NetworkPacket packet)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => HandleLobbyPacket(packet)));
+                return;
+            }
+
+            switch (packet.Action.ToLower())
+            {
+                case "update_players":
+                    var players = packet.Message.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    UpdatePlayerList(players);
+                    break;
+
+                case "start_game":
+                    _networkService.OnMessageReceived -= HandleLobbyPacket;
+                    InGameForm inGame = new InGameForm(_networkService, _username);
+                    inGame.Show();
+                    this.Hide();
+                    break;
+            }
+        }
+
         public void UpdatePlayerList(string[] players)
         {
-            if (lvPlayers.InvokeRequired) { lvPlayers.Invoke(new Action(() => UpdatePlayerList(players))); return; }
             lvPlayers.Items.Clear();
-            foreach(var p in players) lvPlayers.Items.Add(new ListViewItem(p));
+            foreach(var p in players) lvPlayers.Items.Add(new ListViewItem(p.Trim()));
+            lblPlayerCount.Text = $"Số lượng: {lvPlayers.Items.Count}/10";
         }
     }
 }
