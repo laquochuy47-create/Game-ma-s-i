@@ -9,7 +9,7 @@ namespace GameClient.Network
 {
     public class NetworkPacket
     {
-        public string Action { get; set; }  // "vote", "chat", "niu", "soi"
+        public string Action { get; set; }
         public string Target { get; set; }  
         public string Message { get; set; } 
         public string Sender { get; set; }  
