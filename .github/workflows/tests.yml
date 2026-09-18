@@ -1,0 +1,33 @@
+name: Werewolf Automated Tests
+
+on:
+  push:
+    branches:
+      - feature/testing
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  automated-tests:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Show .NET version
+        run: dotnet --version
+
+      - name: Run automated tests
+        shell: powershell
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\run-tests.ps1"
